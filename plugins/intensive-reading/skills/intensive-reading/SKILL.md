@@ -152,8 +152,8 @@ Spawn the predefined agent `phase2-surveyor`. Pass `${WORK_DIR}`. The agent read
 
 **Phase 2-verify (main agent):** After the Phase 2 sub-agent completes, verify the outputs:
 
-1. `_survey.md` contains 10–40 terms, each with abbreviation | full English name | Chinese translation.
-2. `prepend.md` has 3–8 primers, each 5–12 Chinese sentences.
+1. `_survey.md` contains at least 10 terms, each with abbreviation | full English name | Chinese translation.
+2. `prepend.md` has at least 3 primers, each 5–12 Chinese sentences.
 3. `appendix.md` has Appendix A (Theory Index), Appendix B (Key Values), Appendix C (filled from survey).
 4. If any check fails, fix the file or re-spawn Phase 2 before proceeding to Phase 3.
 5. Append to log: `echo "Phase 2-verify: survey validated" >> _log`.

@@ -39,9 +39,9 @@ Read `_rules.md` for marker definitions and annotation conventions. These inform
 Read `hierarchy.md` once without annotating. Record:
 
 1. **Domain boundaries** — where does the paper switch between disciplines? (e.g., Section 2 is fluid mechanics, Section 3 is numerical methods)
-2. **Prerequisite concepts** — what must a reader already know to follow each section? Assume undergraduate STEM background, no domain specialization. Target 3–8 topics.
+2. **Prerequisite concepts** — what must a reader already know to follow each section? Assume undergraduate STEM background, no domain specialization. Target at least 3 topics.
 3. **Equation inventory** — every numbered equation, its physical role, and the section where it first appears
-4. **Terminology inventory** — every domain-specific acronym/term with first occurrence location and an assigned Chinese translation. This translation column is authoritative for all future annotations. Target 10–40 terms.
+4. **Terminology inventory** — every domain-specific acronym/term with first occurrence location and an assigned Chinese translation. This translation column is authoritative for all future annotations. Target at least 10 terms.
 5. **Argument map** — per section: 2–3 sentences on what the section argues, how it connects to the preceding and following sections. This gives Phase 3 annotators global context without reading the full paper.
 
 ### Step 3: Write _survey.md
