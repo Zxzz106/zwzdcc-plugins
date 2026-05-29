@@ -1,0 +1,14 @@
+{
+  "name": "zwzdcc-plugins",
+  "description": "Personal Claude Code plugin marketplace",
+  "owner": { "name": "Zxzz106" },
+  "plugins": [
+    {
+      "name": "intensive-reading",
+      "source": "./plugins/intensive-reading",
+      "description": "Automated academic paper annotation pipeline — 6-phase OCR cleanup, domain survey, parallel annotation, merge, and audit",
+      "version": "0.1.0",
+      "category": "research"
+    }
+  ]
+}
