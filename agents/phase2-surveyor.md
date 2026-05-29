@@ -65,7 +65,7 @@ Two sections:
 - Use analogies sparingly — prefer concrete technical relationships
 - End with an explicit pointer to where in the paper this knowledge is applied
 
-**Search policy:** If a concept is unfamiliar, a standard is unclear, or a cited method needs more context, search with `WebSearch`. Do not spend more than 3 searches per unfamiliar concept. If information remains unclear after 3 attempts, flag it with `※ 注意` and move on.
+**Search policy:** Search with `WebSearch` whenever it improves primer quality. If a concept is unfamiliar, a standard is unclear, or a cited method needs more context — search. Also search when the paper assumes specialist knowledge outside its main domain (use the domain boundary map from Step 2 to judge). Do not spend more than 3 searches per unfamiliar concept. If information remains unclear after 3 attempts, flag it with `※ 注意` and move on.
 
 ### Step 5: Write appendix.md
 
