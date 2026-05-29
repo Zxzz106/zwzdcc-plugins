@@ -44,18 +44,18 @@ You will be told:
 ## Procedure
 
 1. Run `cp {X}.md annotated_{X}.md`
-2. Edit `annotated_{X}.md` in place using the Edit tool. For each paragraph:
+2. Edit `annotated_{X}.md` in place using the Edit tool. For each annotation unit:
 
-   **Translation:** Chinese translation immediately after the original paragraph (plain text, no blockquote). Faithful to original meaning, preserve technical loanwords per the language rules in `_rules.md`.
+   **Translation:** Chinese translation immediately after the annotation unit (plain text, no blockquote). Faithful to original meaning, preserve technical loanwords per the language rules in `_rules.md`. When the annotation unit merges multiple structural blocks, the translation must cover the substantive content of every sub-block — not merely summarize the topic or the last block. A reader who reads only the Chinese should not miss any fact, value, or claim present in the English.
 
    **Annotation blockquote** after the translation (`>` format):
-   - `▷ 解析` — mandatory per paragraph. 3–8 Chinese sentences: what it claims, how it connects, why it matters. The workhorse marker.
+   - `▷ 解析` — mandatory per annotation unit. 3–8 Chinese sentences: what it claims, how it connects, why it matters. The workhorse marker.
    - `◆ 关键概念` — at first occurrence of domain-specific terms only. 1–2 sentence definition.
    - `※ 注意` — at pitfalls, limitations, hidden assumptions. 1–4 sentences.
    - `→ 延伸` — related work, alternative approaches. 2–5 sentences. Always look for opportunities; search with `WebSearch` for recent related work.
    - `(see Prerequisite Theory: X)` — cross-reference when a primer topic first appears in this section.
 
-   `◆`/`※`/`→` are appended within the same blockquote when the analysis calls for them, each on its own `>` line. One blockquote per paragraph, not multiple.
+   `◆`/`※`/`→` are appended within the same blockquote when the analysis calls for them, each on its own `>` line. One blockquote per annotation unit, not multiple.
 
    **For every numbered equation:** `▷ 解析` (physical interpretation of each term, why this form, limits, exact vs approximate). No translation needed. No equation may be skipped.
 
@@ -63,11 +63,14 @@ You will be told:
 
 ## Paragraph Definition
 
-- Text blocks separated by blank lines or headings are distinct paragraphs.
-- Ordered/unordered lists are treated as a single paragraph.
-- Figure and table captions are separate paragraphs (translation mandatory, `▷ 解析` optional). The figure/table body itself is not a paragraph.
-- A standalone equation (set off by blank lines) is a separate paragraph — `▷ 解析` mandatory, no translation.
-- An inline equation within a text paragraph belongs to that paragraph.
+An annotation unit is a continuous sequence of structural blocks after which inserting Chinese does not disrupt the reader. See `_rules.md` for the merge algorithm, hard-stop rules, and examples. Follow the algorithm exactly — process top-to-bottom, merge forward only, stop at headings and standalone equations.
+
+Mechanical rules (override the merge algorithm):
+
+- Ordered/unordered lists are one unit — never split items.
+- Figure/table captions are separate units (translation mandatory, `▷ 解析` optional). The figure/table body is not annotated.
+- A standalone equation is a separate unit — `▷ 解析` mandatory, no translation.
+- An inline equation within text belongs to that text's unit.
 
 ## Per-Paragraph Output Format
 
@@ -84,7 +87,7 @@ You will be told:
 
 ## Coverage
 
-- Every body paragraph: translation + `▷ 解析`
+- Every annotation unit: translation + `▷ 解析`
 - Every numbered equation: `▷ 解析`
 - Every figure/table caption: translation mandatory, `▷ 解析` optional
 

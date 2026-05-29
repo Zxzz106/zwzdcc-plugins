@@ -76,7 +76,7 @@ Three appendix sections:
 
 **Appendix B — Key Values:** Every quantitative result from the paper (performance numbers, physical constants, optimal parameters, error rates). Include section and context.
 
-**Appendix C — Terminology (Glossary):** Full table from the terminology inventory: English term | Chinese translation | First occurrence (section). All acronyms must be covered.
+**Appendix C — Glossary:** Full table from the terminology inventory: English term | Chinese translation | First occurrence (section). All acronyms must be covered.
 
 ### Completion
 

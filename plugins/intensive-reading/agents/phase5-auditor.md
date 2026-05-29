@@ -39,15 +39,21 @@ Scan `audit.md` against this checklist:
 
 **(b) Annotation depth uniformity** — scan across sections. Flag sections where `▷ 解析` blocks are noticeably shorter than average (more than 2 sentences below mean).
 
-**(c) Prerequisite theory placement** — verify no `▶ 理论补充` appears in the body (it belongs in prepend.md only). Verify that every `(see Prerequisite Theory: X)` reference in the body has a matching `▶ 理论补充：X` primer in prepend.md.
+**(c) Prerequisite theory placement** — verify no `▶ 理论补充` appears in the body (it belongs in the prepend section at the top of the document only). Verify that every `(see Prerequisite Theory: X)` reference in the body has a matching `▶ 理论补充：X` primer in the prepend section.
 
-**(d) Paragraph coverage** — confirm every body paragraph has translation + `▷ 解析`. Exceptions: standalone equations (`▷ 解析` only), post-body admin sections (CRediT, Declarations, Acknowledgements, Data availability, References — translation only). Figure and table bodies are not paragraphs and should not be flagged. Flag true orphans.
+**(d) Paragraph coverage** — at each `▷ 解析` marker, read the English text immediately before it. Ask: **does this text form a complete, self-contained unit?** If the answer is no — the text is a fragment that needs adjacent blocks to make sense (e.g., a single case from a parallel set, a dependent clause separated from its main argument) — flag it as a boundary error: the annotator should have merged these blocks.
+
+For each annotation unit, verify the Chinese translation covers the substantive content of every sub-block in the preceding English — facts, values, claims must all appear in translation. A summary that skips a sub-block's content is a coverage gap. Flag omissions.
+
+Then scan for English text with no following Chinese. Two consecutive English blocks without Chinese between them is acceptable when they form one annotation unit (applying the same test — inserting Chinese between them would break the reader's flow). Flag only English that ends without Chinese before a heading boundary, section break, or clear topic shift. Exceptions: standalone equations (`▷ 解析` only), post-body admin (CRediT, Declarations, Acknowledgements, Data availability, References — translation only). Figure/table bodies are not annotated.
 
 **(e) Equation coverage** — confirm every numbered equation has a `▷ 解析`. No translation required for equations.
 
 **(f) Figure/table caption coverage** — confirm every figure and table caption has translation. `▷ 解析` is optional; do not flag missing annotation on captions. The visual content itself is not checked.
 
-Write issue list to `${WORK_DIR}/_audit.md`. Each issue: line number, category (a–f), one-line description.
+**(g) Per-section annotation density** — count `▷ 解析` markers per body section. Flag any section whose count is less than half the average across body sections. Post-body admin (translation only) is excluded from this comparison.
+
+Write issue list to `${WORK_DIR}/_audit.md`. Each issue: line number, category (a–g), one-line description.
 
 ## Step 2 — Fix
 

@@ -49,7 +49,7 @@ Summary of the five markers:
 | Marker | Type | Purpose |
 |--------|------|---------|
 | `▶ 理论补充` | Prerequisite theory | Background knowledge needed before reading the passage (in prepend.md only) |
-| `▷ 解析` | Paragraph analysis | What it claims, how it connects, why it matters (mandatory per paragraph) |
+| `▷ 解析` | Paragraph analysis | What it claims, how it connects, why it matters (mandatory per annotation unit) |
 | `◆ 关键概念` | Key concept | First occurrence of a domain-specific term — one-sentence definition |
 | `※ 注意` | Caution | Pitfall, limitation, hidden assumption, common misunderstanding |
 | `→ 延伸` | Extension | Related work, alternative approach, further reading |
@@ -92,18 +92,20 @@ Every phase follows copy-then-edit: each output file is either a copy of a previ
 2. ${WORK_DIR} exists, _sections.txt missing
    → Phase 0 complete. Run Phase 1.
 
-3. _sections.txt exists, prepend.md missing
-   → Phase 1 complete. Run Phase 2.
+3. _sections.txt and 0.md exist, prepend.md missing
+   → Phase 1 complete (split files present). Run Phase 2.
+3a. _sections.txt exists but 0.md missing
+   → Phase 1 crashed mid-split. Delete _sections.txt and re-run Phase 1.
 
-4. prepend.md exists, _log lacks some done X.md entries
-   → Phase 2 complete. Run Phase 3 for uncompleted X.md only.
+4. prepend.md exists, merged.md missing
+   → Phase 2 and Phase 3 (partial) complete. Run Phase 3 for uncompleted X.md only.
    Read _sections.txt to enumerate expected X values (0 through N+1).
-   grep _log for '^done' to list completed files.
-   For each X without a done entry: spawn a Phase 3 sub-agent for X.md.
-   For each X with a done entry: skip (already done).
+   grep _log for '^done\|^FAILED' — these mark files that need no further action.
+   For each X without a done or FAILED entry: spawn a Phase 3 sub-agent.
+   For each X with a done or FAILED entry: skip.
 
-5. All done entries in _log match _sections.txt, merged.md missing
-   → Phase 3 complete. Run Phase 4.
+5. Every X in _sections.txt has a done or FAILED entry in _log, merged.md missing
+   → Phase 3 complete. Run Phase 4. If any X has only a FAILED entry, note it in the final report but proceed — Phase 5 will catch missing coverage.
 
 6. merged.md exists, audit.md missing
    → Phase 4 complete. Run Phase 5.
@@ -115,9 +117,9 @@ Every phase follows copy-then-edit: each output file is either a copy of a previ
 **Signal priority by phase:**
 
 - Phase 0/1/2/4/5: sentinel file existence is authoritative. A phase could crash after writing output but before logging; the output file is the ground truth. Use `_log` only as a secondary confirmation.
-- Phase 3: `_log` is authoritative for per-file completion. The sub-agent writes `echo "done X.md" >> _log` as its final step — a `done` entry guarantees the annotation completed. File existence of `annotated_X.md` alone does not guarantee completion (a partial write from a crashed agent could leave a corrupt file). Trust `done` entries in `_log`.
+- Phase 3: `_log` is authoritative for per-file completion. The sub-agent writes `echo "done X.md" >> _log` as its final step. File existence of `annotated_X.md` alone does not guarantee completion (a partial write from a crashed agent could leave a corrupt file). Trust `done` entries in `_log`, but after confirming each `done` entry, verify `annotated_X.md` exists and its size exceeds `X.md` (annotations add content — a smaller or equal-sized file is a partial write).
 
-**Phase 3 partial resume detail:** The main agent reads `_sections.txt` to enumerate `{0, 1, ..., N+1}`. It runs `grep '^done' _log` to identify completed files. For each X without a `done` entry, it spawns a Phase 3 sub-agent. If `annotated_X.md` exists for a file without a `done` entry, delete it before spawning (it is a partial write). Already-complete files are left untouched. After the new batch completes, `grep -c '^done' _log` must equal the total number of split files.
+**Phase 3 partial resume detail:** The main agent reads `_sections.txt` to enumerate `{0, 1, ..., N+1}`. It runs `grep '^done\|^FAILED' _log` to identify files needing no further action. For each X without a `done` or `FAILED` entry, it spawns a Phase 3 sub-agent. If `annotated_X.md` exists for a file without a `done` entry, delete it before spawning (it is a partial write). Files with `done` or `FAILED` entries are left untouched. After the new batch completes, every X must have either a `done` or `FAILED` entry in `_log`.
 
 No phase ever overwrites a completed output file. A resume from any point produces the same result as an uninterrupted run.
 
@@ -154,7 +156,7 @@ Spawn the predefined agent `phase2-surveyor`. Pass `${WORK_DIR}`. The agent read
 
 1. `_survey.md` contains at least 10 terms, each with abbreviation | full English name | Chinese translation.
 2. `prepend.md` has at least 3 primers, each 5–12 Chinese sentences.
-3. `appendix.md` has Appendix A (Theory Index), Appendix B (Key Values), Appendix C (filled from survey).
+3. `appendix.md` has Appendix A (Theory Index), Appendix B (Key Values), Appendix C (Glossary — filled from survey).
 4. If any check fails, fix the file or re-spawn Phase 2 before proceeding to Phase 3.
 5. Append to log: `echo "Phase 2-verify: survey validated" >> _log`.
 
@@ -167,8 +169,8 @@ Spawn one `phase3-annotator` agent per file `X.md` (X = 0, 1, 2, ..., N+1). ALL 
 1. Read `_sections.txt` to enumerate all X values.
 2. For each X, write `echo "started X.md" >> _log` to mark in-progress.
 3. Spawn all `phase3-annotator` agents simultaneously. Each prompt: `WORK_DIR=<path> X=<N> SECTION_NAME=<name>`. The agent reads `_rules.md`, `_survey.md`, `prepend.md`, `X.md`, then produces `annotated_X.md` and signals `done X.md` in `_log`.
-4. After all return, verify: `grep -c '^done' _log` must equal the total number of split files. If any file missing, re-spawn only that one (max 2 retries per file; if still failing, flag with `echo "FAILED X.md after 3 attempts" >> _log` and continue — Phase 5 will catch missing coverage).
-5. Append: `echo "Phase 3: all N files annotated" >> _log`.
+4. After all return, verify: `grep -c '^done\|^FAILED' _log` equals the total number of split files. For each `done X.md`, verify `annotated_X.md` exists and `wc -c annotated_X.md` > `wc -c X.md` (annotations add content). If any file missing, re-spawn only that one (max 2 retries per file; if still failing, flag with `echo "FAILED X.md after 3 attempts" >> _log` and continue — Phase 5 will catch missing coverage).
+5. Append: `echo "Phase 3: N files processed (M failed)" >> _log` (M = count of FAILED entries; M = 0 if all succeeded).
 
 ### Phase 4: Merge (Main Agent)
 
@@ -182,7 +184,7 @@ cat "${WORK_DIR}/prepend.md" "${WORK_DIR}/annotated_0.md" ... "${WORK_DIR}/annot
 
 2. **Verify structure:**
    - Total line count ≥ sum of source files (no truncation).
-   - Heading count from `grep -c '^#' merged.md` equals heading count from `grep -c '^#' hierarchy.md` (no headings lost or duplicated).
+   - Every heading from `hierarchy.md` appears in `merged.md` — no headings lost during merge. The merged count will be larger (prepend + appendix headings added), not equal.
 3. Append to log: `echo "Phase 4: merged to merged.md" >> _log`.
 
 ### Phase 5: Audit and Fix (Sub-Agent)
@@ -257,7 +259,7 @@ intensive-${BASENAME}.md  # Finalize: cp audit.md → alongside source paper
 Before delivering the intensive reading document, verify:
 
 - [ ] All original paper content is preserved (Abstract through References)
-- [ ] 100% coverage confirmed by Phase 5 audit: (a) every body paragraph has translation + `▷ 解析`; (b) every numbered equation has `▷ 解析`; (c) every figure/table caption has translation
+- [ ] 100% coverage confirmed by Phase 5 audit: (a) every annotation unit has translation + `▷ 解析`; (b) every numbered equation has `▷ 解析`; (c) every figure/table caption has translation
 - [ ] Prerequisite theory section covers every domain boundary identified in Survey
 - [ ] Every equation has a physical interpretation (not just variable renaming)
 - [ ] Every figure and table caption is translated

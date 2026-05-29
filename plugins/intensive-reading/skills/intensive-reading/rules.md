@@ -10,7 +10,7 @@
 | `※ 注意` | Pitfall, limitation, hidden assumption, common misunderstanding |
 | `→ 延伸` | Related work, alternative approach, further reading |
 
-`▷` is mandatory per paragraph — the workhorse. `◆`/`※`/`→` may be appended within the same blockquote when the analysis naturally calls for them, each on its own `>` line. One blockquote per paragraph, not multiple.
+`▷` is mandatory per annotation unit — the workhorse. `◆`/`※`/`→` may be appended within the same blockquote when the analysis naturally calls for them, each on its own `>` line. One blockquote per annotation unit, not multiple.
 
 `◆ 关键概念` fires once per term (first occurrence only).
 
@@ -41,7 +41,7 @@ Guidelines, not hard limits. Equations can push `▷` longer when every term nee
 > → 延伸：[extension if applicable]
 ```
 
-Translation goes directly after the original paragraph. Annotation blockquote goes after the translation.
+Translation goes directly after the annotation unit. When the unit merges multiple structural blocks, the translation covers every sub-block — no fact, value, or claim present in the English may be absent from the Chinese. Annotation blockquote goes after the translation.
 
 **Visual distinction:** Annotations must be visually separable from original text. Use blockquote formatting (`> ▷ ...`) for paragraph-level annotations. Translations are plain text (no blockquote) to distinguish them from annotations. For block-level annotations (primer sections, appendix content), use section headings to separate.
 
@@ -51,7 +51,7 @@ Translation goes directly after the original paragraph. Annotation blockquote go
 - Appendix C (Glossary) maps English terms to Chinese.
 - Translations must use the Chinese terms assigned in `_survey.md` — do NOT invent new ones.
 
-**Translation format:** Chinese translations are placed directly after the original paragraph, in plain text without any blockquote marker. Translations should be faithful to the original meaning, preserve technical terms as-is per the loanword rules below, and match the tone of the original (academic, not colloquial).
+**Translation format:** Chinese translations are placed directly after the annotation unit, in plain text without any blockquote marker. Translations should be faithful to the original meaning, preserve technical terms as-is per the loanword rules below, and match the tone of the original (academic, not colloquial).
 
 **English terms to preserve untranslated:** Keep common technical loanwords in their English form when they are the dominant usage in Chinese academic discourse. Do NOT translate these to rare or awkward Chinese equivalents. The table below is illustrative and non-exhaustive — the rule of thumb at the bottom takes precedence over the table:
 
@@ -95,23 +95,55 @@ For every figure/table caption: translation is mandatory, `▷ 解析` is option
 
 ## Paragraph Definition
 
-A paragraph is the smallest annotation unit. Boundaries are determined by structure, not by natural-language intuition:
+An annotation unit is a continuous sequence of one or more structural blocks (separated by blank lines) after which a Chinese translation + annotation can be inserted without disrupting the reader.
 
-- Text blocks separated by blank lines or headings are distinct paragraphs.
-- Ordered/unordered lists are treated as a single paragraph (do not annotate each item separately).
-- Figure and table captions are separate paragraphs (translation mandatory, `▷ 解析` optional). The figure or table body itself is not a paragraph — do not attempt to translate or annotate it.
-- A standalone equation (set off by blank lines, on its own line or lines) is a separate paragraph. No Chinese translation is needed; a `▷ 解析` annotation is mandatory.
-- An inline equation embedded within a text paragraph belongs to that paragraph — translate and annotate together.
+### Merge algorithm
+
+Process the section top-to-bottom. Start a new annotation unit at the first block. For each structural boundary ahead, apply this test:
+
+> **Would putting Chinese here break the reader's flow?**
+
+- **Yes** → merge forward: include the next block in the current unit, continue to the following boundary.
+- **No** → stop: the current unit ends here. Insert translation + `▷ 解析`. Start a new unit from the next block.
+
+Repeat until the section ends.
+
+### Merge rules
+
+- Only merge forward, only consecutive blocks. Never skip a block to merge with a later one.
+- A unit ending at a heading boundary is not an error — headings are natural stops.
+
+### Hard stops
+
+These boundaries always end the current annotation unit regardless of the flow test:
+
+- Any heading (`#`, `##`, ...)
+- A standalone equation (set off by blank lines)
+
+### Examples
+
+| Situation | Blocks | Units |
+|-----------|--------|-------|
+| Each paragraph is a distinct point | Introduction §1, §2, §3 | 3 separate units |
+| 2×2 experimental design | "Four cases were designed:", Case 1, Case 2, Case 3, Case 4 | 1 unit of 5 blocks |
+| Claim + supporting evidence | "Three factors affect X.", Factor A paragraph, Factor B paragraph, Factor C paragraph | 1 unit of 4 blocks |
+
+Mechanical rules (override the merge algorithm):
+
+- Ordered/unordered lists are one annotation unit — never split items.
+- Figure/table captions are separate units (translation mandatory, `▷ 解析` optional). The figure/table body is not annotated.
+- A standalone equation is a separate unit. No translation; `▷ 解析` mandatory.
+- An inline equation within text belongs to that text's unit.
 
 ## Coverage
 
-- Every body paragraph: translation + `▷ 解析` — mandatory. Standalone equations: `▷ 解析` only.
+- Every annotation unit: translation + `▷ 解析` — mandatory. Standalone equations: `▷ 解析` only.
 - Every numbered equation: `▷ 解析` — mandatory
 - Every figure/table caption: translation mandatory, `▷ 解析` optional. The visual content itself is not translated or annotated.
 
 ## Annotation Writing Guidance
 
-After each paragraph: `▷ 解析` explains what the paragraph claims, how it connects to preceding argument, what is assumed vs. demonstrated, why it matters to the paper's overall argument.
+After each annotation unit: `▷ 解析` explains what the unit claims, how it connects to preceding argument, what is assumed vs. demonstrated, why it matters to the paper's overall argument.
 
 After each equation: `▷ 解析` explains physical meaning of each term, why this specific form was chosen, what happens at limits, whether the relationship is exact or approximate.
 
