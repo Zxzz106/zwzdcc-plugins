@@ -1,0 +1,7 @@
+{
+  "name": "intensive-reading",
+  "description": "Automated academic paper annotation pipeline: OCR cleanup, domain survey, parallel annotation, merge, and audit. Produces layered Chinese annotations on papers for progressive reading from surface comprehension to deep understanding.",
+  "version": "0.1.0",
+  "author": "",
+  "dependencies": {}
+}
