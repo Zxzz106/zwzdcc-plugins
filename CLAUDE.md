@@ -4,25 +4,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Personal Claude Code plugin marketplace (`zwzdcc-plugins`). Currently contains one plugin: `intensive-reading` — automated academic paper annotation via a 6-phase pipeline.
+Personal Claude Code plugin marketplace (`zwzdcc-plugins`). Contains three plugins: `intensive-reading`, `academic-writing-check`, and `grill-me`.
 
 ## Repository structure
 
 ```
 zwzdcc-plugins/
 ├── .claude-plugin/
-│   └── marketplace.json            # Marketplace manifest — lists all plugins
+│   └── marketplace.json
 ├── plugins/
-│   └── intensive-reading/          # Plugin: intensive-reading
-│       ├── .claude-plugin/
-│       │   └── plugin.json
-│       ├── agents/                 # Pre-defined sub-agents (flat .md + YAML frontmatter)
-│       └── skills/intensive-reading/
-│           ├── SKILL.md            # Orchestration and pipeline control flow
-│           └── rules.md            # Annotation conventions (shared)
+│   ├── intensive-reading/          # Paper annotation pipeline (agents + skill)
+│   ├── academic-writing-check/     # Academic writing review (skill only)
+│   └── grill-me/                   # Design interrogation (skill only)
 ├── CLAUDE.md
 └── README.md
 ```
+
+Each plugin has its own `.claude-plugin/plugin.json`. Skill-only plugins contain just `skills/<name>/SKILL.md`. The intensive-reading plugin also includes `agents/` for its pipeline sub-agents.
 
 To add a new plugin: create `plugins/<name>/` with its own `.claude-plugin/plugin.json`, then add an entry to the `plugins` array in `marketplace.json`.
 

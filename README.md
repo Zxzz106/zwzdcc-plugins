@@ -20,11 +20,21 @@ Automated academic paper annotation pipeline. Produces layered, additive Chinese
 
 Annotations preserve all original content. Five markers: prerequisite theory (`▶`), paragraph analysis (`▷`), key concepts (`◆`), cautions (`※`), extensions (`→`).
 
+### academic-writing-check
+
+Check academic writing for common issues: overclaiming, rhetorical inflation, citation accuracy, formatting, terminology, and structural consistency. Reports violations by category with line references and suggested corrections.
+
+### grill-me
+
+Interview the user relentlessly about a plan or design until reaching shared understanding, walking down each branch of the decision tree one question at a time.
+
 ## Install
 
 ```bash
 claude plugin marketplace add Zxzz106/zwzdcc-plugins
 claude plugins install intensive-reading@zwzdcc-plugins
+claude plugins install academic-writing-check@zwzdcc-plugins
+claude plugins install grill-me@zwzdcc-plugins
 ```
 
 Restart Claude Code after installation.
@@ -32,10 +42,12 @@ Restart Claude Code after installation.
 ## Usage
 
 ```
-intensive reading of path/to/paper.md
+intensive reading of path/to/paper.md   # Annotate academic papers
+academic writing check                  # Review academic writing
+grill me                                # Stress-test a plan or design
 ```
 
-Supports `.md` files directly, PDFs via `mineru_2md` extraction, and URLs via WebFetch. Output lands alongside the source paper as `intensive-<basename>.md`.
+intensive-reading supports `.md` files directly, PDFs via `mineru_2md` extraction, and URLs via WebFetch. Output lands alongside the source paper as `intensive-<basename>.md`.
 
 ## Requirements
 

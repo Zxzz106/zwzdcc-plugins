@@ -9,6 +9,20 @@
       "description": "Automated academic paper annotation pipeline — 6-phase OCR cleanup, domain survey, parallel annotation, merge, and audit",
       "version": "0.1.0",
       "category": "research"
+    },
+    {
+      "name": "academic-writing-check",
+      "source": "./plugins/academic-writing-check",
+      "description": "Check academic writing for common issues: overclaiming, rhetorical inflation, citation accuracy, formatting, terminology, and structural consistency",
+      "version": "0.1.0",
+      "category": "writing"
+    },
+    {
+      "name": "grill-me",
+      "source": "./plugins/grill-me",
+      "description": "Interview the user relentlessly about a plan or design until reaching shared understanding, resolving each branch of the decision tree",
+      "version": "0.1.0",
+      "category": "thinking"
     }
   ]
 }

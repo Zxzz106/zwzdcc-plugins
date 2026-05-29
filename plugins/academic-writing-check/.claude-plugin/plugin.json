@@ -1,0 +1,8 @@
+{
+  "name": "academic-writing-check",
+  "description": "Check academic writing for common issues: overclaiming, rhetorical inflation, citation accuracy, formatting, terminology, and structural consistency.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Zxzz106"
+  }
+}
