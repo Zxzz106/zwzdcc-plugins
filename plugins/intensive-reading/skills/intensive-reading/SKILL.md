@@ -33,7 +33,7 @@ Before starting Phase 0, verify the paper text is available in the conversation 
    ln -s "${PAPER_DIR}/${BASENAME}/full.md" "${PAPER_DIR}/${BASENAME}.md"
    ```
    The symlink `${PAPER_DIR}/${BASENAME}.md` becomes the source file for Phase 0.
-3. If a URL is provided, fetch it with WebFetch.
+3. If a URL is provided, run `mineru_2md "<url>"` — mineru_2md supports any URL (PDF, HTML, arXiv).
 4. If none of the above, ask the user to provide the paper text or file path.
 
 Do NOT proceed to Phase 0 without the full paper text. An abstract alone is insufficient for intensive reading.
