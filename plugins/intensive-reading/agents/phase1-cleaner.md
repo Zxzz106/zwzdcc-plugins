@@ -13,7 +13,8 @@ tools:
   - Grep
   - Glob
 permissionMode: acceptEdits
-maxTurns: 30
+maxTurns: 50
+background: false
 ---
 
 # Phase 1: OCR Cleanup and Split

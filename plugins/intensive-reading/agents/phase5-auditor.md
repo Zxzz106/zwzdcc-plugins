@@ -11,7 +11,8 @@ tools:
   - Bash(echo *)
   - Grep
 permissionMode: acceptEdits
-maxTurns: 40
+maxTurns: 60
+background: false
 ---
 
 # Phase 5: Audit and Fix

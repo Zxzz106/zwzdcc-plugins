@@ -11,7 +11,8 @@ tools:
   - Grep
   - WebSearch
 permissionMode: acceptEdits
-maxTurns: 80
+maxTurns: 120
+background: false
 ---
 
 # Phase 3: Translate and Annotate

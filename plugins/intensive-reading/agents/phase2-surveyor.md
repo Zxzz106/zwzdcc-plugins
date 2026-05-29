@@ -12,7 +12,8 @@ tools:
   - WebSearch
   - WebFetch
 permissionMode: acceptEdits
-maxTurns: 60
+maxTurns: 80
+background: false
 ---
 
 # Phase 2: Survey
