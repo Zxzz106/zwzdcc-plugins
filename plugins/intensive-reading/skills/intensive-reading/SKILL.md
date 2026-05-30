@@ -24,34 +24,24 @@ Do NOT use for: simple summaries, "what does paper X say about Y", one-paragraph
 
 ## Variables
 
+All variables are provided by `phase0-initializer`, which handles both `.md` and `.pdf` inputs uniformly. The main agent does not derive paths — it uses the returned values directly.
+
 | Variable | Value | Meaning |
 |----------|-------|---------|
-| `BASENAME` | source filename without extension | The raw paper filename (`.md` or `.pdf`). **Never** starts with `intensive-`. |
-| `ORIG_FILE_DIR` | user-provided or derived (PDF only) | Parent directory containing the `.pdf` file. Not used for `.md` input. |
-| `PAPER_DIR` | `.md` input: `dirname(paper.md)` | The directory containing the source file and all outputs. |
-|  | `.pdf` input: `${ORIG_FILE_DIR}/${BASENAME}` | |
+| `BASENAME` | source filename without extension | The raw paper filename. |
+| `PAPER_DIR` | directory containing the source file | All pipeline inputs and outputs live here. |
 | `WORK_DIR` | `${PAPER_DIR}/intensive-${BASENAME}` | All pipeline artifacts live here. |
-| Source file | `${PAPER_DIR}/${BASENAME}.md` | Phase 0 copies this to `${WORK_DIR}/original.md`. |
-| Final output | `${PAPER_DIR}/intensive-${BASENAME}.md` | Exported annotated markdown. **Not** the source — do not derive `BASENAME` from this. |
-| HTML output | `${PAPER_DIR}/intensive-${BASENAME}.html` | Phase 6 pandoc conversion. |
+| `SOURCE_FILE` | `${PAPER_DIR}/${BASENAME}.md` | Phase 0 copies this to `${WORK_DIR}/original.md`. |
+| `MD_OUTPUT` | `${PAPER_DIR}/intensive-${BASENAME}.md` | Exported annotated markdown. |
+| `HTML_OUTPUT` | `${PAPER_DIR}/intensive-${BASENAME}.html` | Phase 6 pandoc conversion. |
 
-`BASENAME` identifies the *original source* throughout the pipeline. The `intensive-` prefix appears only in derived paths (`WORK_DIR`, final output, HTML output) — never on `BASENAME` itself.
+`BASENAME` identifies the original source throughout the pipeline. The `intensive-` prefix appears only in derived paths (`WORK_DIR`, `MD_OUTPUT`, `HTML_OUTPUT`) — never on `BASENAME` itself.
 
 ## Preconditions
 
-Before starting Phase 0, verify the paper text is available:
+The user must provide an `.md` or `.pdf` file. If neither, ask for one.
 
-1. If the user provides an `.md` file, use it directly.
-2. If the user provides a `.pdf` file, extract and rename:
-   ```bash
-   PAPER_DIR="${ORIG_FILE_DIR}/${BASENAME}"
-   mineru_2md "${ORIG_FILE_DIR}/${BASENAME}.pdf"           # → ${PAPER_DIR}/full.md
-   mv "${PAPER_DIR}/full.md" "${PAPER_DIR}/${BASENAME}.md"
-   ```
-   The renamed file `${PAPER_DIR}/${BASENAME}.md` becomes the source file for Phase 0.
-3. Otherwise, ask the user to provide an `.md` or `.pdf` file.
-
-Once the paper source is confirmed: all work happens in `${WORK_DIR}`. See the Variables table above for path definitions.
+All path derivation and initialization is handled by `phase0-initializer` (Phase 0). The main agent spawns it, receives the variable table, and uses those values for all subsequent phases.
 
 ## Annotation Conventions
 
@@ -90,7 +80,7 @@ Search is encouraged whenever it improves annotation quality. If a concept is un
 
 ## Core Methodology
 
-All work happens within `intensive-${BASENAME}/`, located in the same directory as the source paper. The main agent creates this directory in Phase 0. All supporting files (`_survey.md`, `_audit.md`, per-section files, etc.) live here. Phase 4 merges into `merged.md`; Phase 5 audits and fixes into `audit.md`; the main agent copies `audit.md` to the final output `intensive-${BASENAME}.md` alongside the source paper.
+All work happens within `intensive-${BASENAME}/`, located in the same directory as the source paper. `phase0-initializer` creates this directory. All supporting files (`_survey.md`, `_audit.md`, per-section files, etc.) live here. Phase 4 merges into `merged.md`; Phase 5 audits and fixes into `audit.md`; the main agent copies `audit.md` to the final output `intensive-${BASENAME}.md` alongside the source paper.
 
 ### Interrupt-Resume
 
@@ -98,15 +88,15 @@ Every phase follows copy-then-edit: each output file is either a copy of a previ
 
 **On any fresh start, before executing Phase 0, the main agent runs the resume check script:**
    ```bash
-   bash "${CLAUDE_PLUGIN_ROOT}/scripts/check-resume.sh" "${PAPER_DIR}" "${BASENAME}"
+   bash "${CLAUDE_PLUGIN_ROOT}/scripts/check-resume.sh" "<absolute path to source file>"
    ```
-   The script validates inputs (rejects BASENAME with path separators or `intensive-` prefix, confirms source file exists), inventories sentinel files, reports per-file Phase 3 status, and prints a verdict. The main agent reads the verdict and proceeds to the indicated phase.
+   The script derives `PAPER_DIR` and `BASENAME` from the source file path, validates inputs (rejects files with `intensive-` prefix or unsupported extensions, confirms source file exists), inventories sentinel files, reports per-file Phase 3 status, and prints a verdict. The main agent reads the verdict and proceeds to the indicated phase.
 
    The verdict cases:
 
 ```
 1. ${WORK_DIR} does not exist
-   → Run Phase 0, then continue to Phase 1.
+   → Spawn phase0-initializer, then continue to Phase 1.
 
 2. ${WORK_DIR} exists, _sections.txt missing
    → Phase 0 complete. Run Phase 1.
@@ -148,24 +138,17 @@ Every phase follows copy-then-edit: each output file is either a copy of a previ
 
 No phase ever overwrites a completed output file. A resume from any point produces the same result as an uninterrupted run.
 
-### Phase 0: Copy the Source (Main Agent)
+### Phase 0: Initialize (Sub-Agent)
 
-Determine the source file's absolute directory and derive the work directory alongside it:
+Spawn the predefined agent `phase0-initializer`. Pass the absolute path to the source file and `${CLAUDE_PLUGIN_ROOT}`.
 
-```bash
-PAPER_DIR="$(cd "$(dirname "path/to/paper.md")" && pwd)"
-BASENAME="$(basename "path/to/paper.md" .md)"
-WORK_DIR="${PAPER_DIR}/intensive-${BASENAME}"
+The agent handles both `.md` and `.pdf` inputs:
+- `.pdf`: runs MinerU API extraction, renames output, derives all paths
+- `.md`: validates the file, derives all paths
 
-mkdir -p "${WORK_DIR}"
-cp "path/to/paper.md" "${WORK_DIR}/original.md"
-cp "${CLAUDE_PLUGIN_ROOT}/skills/intensive-reading/rules.md" "${WORK_DIR}/_rules.md"
-echo "Phase 0: initialized ${WORK_DIR}, copied original.md and _rules.md" > "${WORK_DIR}/_log"
-```
+It creates `${WORK_DIR}`, copies `original.md` and `_rules.md`, initializes `_log`, and returns a standardized variable table (`BASENAME`, `PAPER_DIR`, `WORK_DIR`, source file path, final output path, HTML output path).
 
-`${BASENAME}` is the source filename without extension. `${CLAUDE_PLUGIN_ROOT}` resolves to the plugin root directory.
-
-If the source is a PDF, Preconditions (PDF → `mineru_2md`) already handled extraction; no additional step needed here. The extracted `.md` file becomes the source.
+The main agent receives the variable table and uses those values for all subsequent phases — no further path derivation is needed.
 
 **Important:** Do NOT modify the original source file. All work happens inside `${WORK_DIR}`. Sub-agents receive the absolute path `${WORK_DIR}` and reference all files relative to it.
 
@@ -276,7 +259,7 @@ intensive-${BASENAME}.html # Phase 6: pandoc conversion
 
 | Phase | Agent | Action |
 |-------|-------|--------|
-| 0 | Main | `mkdir`, copy `original.md` and `_rules.md`, init `_log` |
+| 0 | `phase0-initializer` | Handle `.md` or `.pdf`: extract PDF if needed, derive paths, `mkdir`, copy `original.md` and `_rules.md`, init `_log`, return variable table |
 | 1 | `phase1-cleaner` | OCR cleanup + heading normalization + manifest + split |
 | 2 | `phase2-surveyor` | Read `_rules.md` + `hierarchy.md`, write `_survey.md`, `prepend.md`, `appendix.md` |
 | 2-verify | Main | Validate survey outputs (term counts, primer length, appendix sections) |

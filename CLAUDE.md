@@ -43,6 +43,7 @@ To add a new plugin: create `plugins/<name>/` with its own `.claude-plugin/plugi
 
 | Agent | Model | Rationale |
 |-------|-------|-----------|
+| phase0-initializer | haiku | Mechanical initialization — path derivation, PDF extraction, work directory setup |
 | phase1-cleaner | haiku | Mechanical OCR cleanup — cheap, no domain reasoning |
 | phase2-surveyor | sonnet | Paper comprehension required for terminology and argument mapping |
 | phase3-annotator | sonnet | Deep annotation — physical interpretation of equations, theoretical context |

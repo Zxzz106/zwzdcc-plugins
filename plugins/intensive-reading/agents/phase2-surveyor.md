@@ -24,7 +24,6 @@ You are Phase 2 of the intensive-reading pipeline. Your task is to survey the pa
 
 - `${WORK_DIR}/_rules.md` — annotation conventions (read this first)
 - `${WORK_DIR}/hierarchy.md` — cleaned, heading-normalized paper
-- `${WORK_DIR}/_log` — shared execution log
 
 All file paths are relative to `${WORK_DIR}`. The main agent will tell you `${WORK_DIR}`.
 

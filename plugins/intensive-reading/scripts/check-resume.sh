@@ -1,40 +1,50 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ $# -ne 2 ]; then
-    echo "Usage: $0 <PAPER_DIR> <BASENAME>" >&2
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 <SOURCE_FILE>" >&2
+    echo "  SOURCE_FILE: absolute path to the paper (.md or .pdf)" >&2
     exit 1
 fi
 
-PAPER_DIR="$1"
-BASENAME="$2"
+SOURCE_FILE="$1"
 
 # --- input validation ---
 err() { echo "ERROR: $1" >&2; exit 2; }
 
-[ -n "$BASENAME" ] || err "BASENAME must not be empty"
+[ -n "$SOURCE_FILE" ] || err "SOURCE_FILE must not be empty"
+[ -f "$SOURCE_FILE" ] || err "SOURCE_FILE does not exist: '${SOURCE_FILE}'"
+
+# Derive BASENAME and PAPER_DIR from the source file
+case "$SOURCE_FILE" in
+    *.md)
+        BASENAME="$(basename "$SOURCE_FILE" .md)"
+        PAPER_DIR="$(cd "$(dirname "$SOURCE_FILE")" && pwd)"
+        ;;
+    *.pdf)
+        BASENAME="$(basename "$SOURCE_FILE" .pdf)"
+        ORIG_FILE_DIR="$(cd "$(dirname "$SOURCE_FILE")" && pwd)"
+        PAPER_DIR="${ORIG_FILE_DIR}/${BASENAME}"
+        ;;
+    *)
+        err "SOURCE_FILE must end in .md or .pdf: '${SOURCE_FILE}'"
+        ;;
+esac
+
 [[ "$BASENAME" != */* ]] || err "BASENAME must not contain path separators: '${BASENAME}'"
 [[ "$BASENAME" != intensive-* ]] || err "BASENAME starts with 'intensive-' — use the original source filename, not the annotated output"
-[ -d "$PAPER_DIR" ] || err "PAPER_DIR does not exist or is not a directory: '${PAPER_DIR}'"
 
-# Confirm the source file or paper directory is plausible
-if [ -f "${PAPER_DIR}/${BASENAME}.md" ]; then
-    :   # source markdown exists
-elif [ -f "${PAPER_DIR}/${BASENAME}.pdf" ]; then
-    :   # source PDF exists (extraction not yet done)
-else
-    err "Neither ${PAPER_DIR}/${BASENAME}.md nor ${PAPER_DIR}/${BASENAME}.pdf found — check PAPER_DIR and BASENAME"
-fi
 WORK_DIR="${PAPER_DIR}/intensive-${BASENAME}"
 
 # Header
 echo "=== interrupt-resume check ==="
-echo "PAPER_DIR: ${PAPER_DIR}"
-echo "BASENAME:   ${BASENAME}"
-echo "WORK_DIR:   ${WORK_DIR}"
+echo "SOURCE_FILE: ${SOURCE_FILE}"
+echo "BASENAME:    ${BASENAME}"
+echo "PAPER_DIR:   ${PAPER_DIR}"
+echo "WORK_DIR:    ${WORK_DIR}"
 echo ""
 
-# Sentinel inventory
+# --- sentinel inventory ---
 echo "--- sentinel files ---"
 check_file() { if [ -f "$1" ]; then echo "  [✓] $2"; else echo "  [✗] $2"; fi; }
 check_dir()  { if [ -d "$1" ]; then echo "  [✓] $2"; else echo "  [✗] $2"; fi; }
@@ -66,11 +76,11 @@ if [ -f "${WORK_DIR}/prepend.md" ] && [ ! -f "${WORK_DIR}/merged.md" ] && [ -f "
     echo ""
 fi
 
-# Verdict
+# --- verdict ---
 echo "--- verdict ---"
 
 if [ ! -d "$WORK_DIR" ]; then
-    echo "Phase 0: WORK_DIR does not exist — initialize and copy source."
+    echo "Phase 0: WORK_DIR does not exist — spawn phase0-initializer."
 elif [ ! -f "${WORK_DIR}/_sections.txt" ]; then
     echo "Phase 1: _sections.txt missing — run OCR cleanup and split."
 elif [ ! -f "${WORK_DIR}/0.md" ]; then

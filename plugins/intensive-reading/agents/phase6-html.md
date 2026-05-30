@@ -6,7 +6,7 @@ tools:
   - Bash
   - Bash(echo *)
 permissionMode: acceptEdits
-maxTurns: 3
+maxTurns: 5
 background: false
 ---
 
