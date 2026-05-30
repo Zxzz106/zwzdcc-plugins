@@ -22,24 +22,36 @@ Core principle: copy the source file, then edit the copy. Annotations are insert
 Use for: 精读, intensive reading, annotated reading, deep understanding of papers, equation/theory explanations.
 Do NOT use for: simple summaries, "what does paper X say about Y", one-paragraph answers.
 
+## Variables
+
+| Variable | Value | Meaning |
+|----------|-------|---------|
+| `BASENAME` | source filename without extension | The raw paper filename (`.md` or `.pdf`). **Never** starts with `intensive-`. |
+| `ORIG_FILE_DIR` | user-provided or derived (PDF only) | Parent directory containing the `.pdf` file. Not used for `.md` input. |
+| `PAPER_DIR` | `.md` input: `dirname(paper.md)` | The directory containing the source file and all outputs. |
+|  | `.pdf` input: `${ORIG_FILE_DIR}/${BASENAME}` | |
+| `WORK_DIR` | `${PAPER_DIR}/intensive-${BASENAME}` | All pipeline artifacts live here. |
+| Source file | `${PAPER_DIR}/${BASENAME}.md` | Phase 0 copies this to `${WORK_DIR}/original.md`. |
+| Final output | `${PAPER_DIR}/intensive-${BASENAME}.md` | Exported annotated markdown. **Not** the source — do not derive `BASENAME` from this. |
+| HTML output | `${PAPER_DIR}/intensive-${BASENAME}.html` | Phase 6 pandoc conversion. |
+
+`BASENAME` identifies the *original source* throughout the pipeline. The `intensive-` prefix appears only in derived paths (`WORK_DIR`, final output, HTML output) — never on `BASENAME` itself.
+
 ## Preconditions
 
-Before starting Phase 0, verify the paper text is available in the conversation context:
+Before starting Phase 0, verify the paper text is available:
 
 1. If the user provides an `.md` file, use it directly.
-2. If a PDF exists, extract it and rename:
+2. If the user provides a `.pdf` file, extract and rename:
    ```bash
    PAPER_DIR="${ORIG_FILE_DIR}/${BASENAME}"
    mineru_2md "${ORIG_FILE_DIR}/${BASENAME}.pdf"           # → ${PAPER_DIR}/full.md
    mv "${PAPER_DIR}/full.md" "${PAPER_DIR}/${BASENAME}.md"
    ```
    The renamed file `${PAPER_DIR}/${BASENAME}.md` becomes the source file for Phase 0.
-3. If a URL is provided, run `mineru_2md "<url>"` — mineru_2md supports any URL (PDF, HTML, arXiv).
-4. If none of the above, ask the user to provide the paper text or file path.
+3. Otherwise, ask the user to provide an `.md` or `.pdf` file.
 
-Do NOT proceed to Phase 0 without the full paper text. An abstract alone is insufficient for intensive reading.
-
-Once the paper source is confirmed, note: `${BASENAME}` is the source filename without extension, and `PAPER_DIR=${ORIG_FILE_DIR}/${BASENAME}`. All work happens in `${PAPER_DIR}/intensive-${BASENAME}/` — i.e., alongside the source file. The final annotated output is `intensive-${BASENAME}.md` in the same directory.
+Once the paper source is confirmed: all work happens in `${WORK_DIR}`. See the Variables table above for path definitions.
 
 ## Annotation Conventions
 
@@ -141,7 +153,7 @@ No phase ever overwrites a completed output file. A resume from any point produc
 Determine the source file's absolute directory and derive the work directory alongside it:
 
 ```bash
-PAPER_DIR="$(dirname "$(realpath "path/to/paper.md")")"
+PAPER_DIR="$(cd "$(dirname "path/to/paper.md")" && pwd)"
 BASENAME="$(basename "path/to/paper.md" .md)"
 WORK_DIR="${PAPER_DIR}/intensive-${BASENAME}"
 
@@ -215,7 +227,7 @@ Report the file path and document structure. Do NOT output the full document inl
 
 ### Phase 6: HTML Conversion (Sub-Agent)
 
-Spawn the predefined agent `phase6-html`. Pass `${PAPER_DIR}`, `${BASENAME}`, and `${WORK_DIR}`. The agent runs pandoc to produce a standalone HTML file with math rendering and table of contents, then appends to `_log`.
+Spawn the predefined agent `phase6-html`. Pass `${CLAUDE_PLUGIN_ROOT}`, `${PAPER_DIR}`, `${BASENAME}`, and `${WORK_DIR}`. The agent calls `convert-html.sh` to produce a standalone HTML file with math rendering and table of contents.
 
 ## Output Structure
 
