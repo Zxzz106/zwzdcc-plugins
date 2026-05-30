@@ -47,6 +47,7 @@ To add a new plugin: create `plugins/<name>/` with its own `.claude-plugin/plugi
 | phase2-surveyor | sonnet | Paper comprehension required for terminology and argument mapping |
 | phase3-annotator | sonnet | Deep annotation — physical interpretation of equations, theoretical context |
 | phase5-auditor | sonnet | Cross-section consistency checking and fix generation |
+| phase6-html | haiku | Mechanical pandoc conversion — cheap, no domain reasoning |
 
 ### Workflow
 

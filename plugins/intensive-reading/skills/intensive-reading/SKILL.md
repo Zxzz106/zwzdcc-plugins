@@ -84,7 +84,7 @@ All work happens within `intensive-${BASENAME}/`, located in the same directory 
 
 Every phase follows copy-then-edit: each output file is either a copy of a previous artifact or newly written to completion. No phase modifies a file from a prior phase in place. This means a session crash or interrupt leaves the work directory in a deterministic state — completed phases have their sentinel files intact, incomplete phases do not.
 
-**On any fresh start, before executing Phase 0, the main agent checks `${WORK_DIR}` and determines the resume point:**
+**On any fresh start, before executing Phase 0, the main agent checks `${WORK_DIR}` (cases 1–6) and `${PAPER_DIR}` (cases 7–9) to determine the resume point:**
 
 ```
 1. ${WORK_DIR} does not exist
@@ -111,13 +111,19 @@ Every phase follows copy-then-edit: each output file is either a copy of a previ
 6. merged.md exists, audit.md missing
    → Phase 4 complete. Run Phase 5.
 
-7. audit.md exists
-   → Phase 5 complete. Run Finalize (or report already done).
+7. audit.md exists, intensive-${BASENAME}.md missing
+   → Phase 5 complete. Run Export.
+
+8. intensive-${BASENAME}.md exists, intensive-${BASENAME}.html missing
+   → Export complete. Run Phase 6.
+
+9. intensive-${BASENAME}.html exists
+   → All phases complete. Report done.
 ```
 
 **Signal priority by phase:**
 
-- Phase 0/1/2/4/5: sentinel file existence is authoritative. A phase could crash after writing output but before logging; the output file is the ground truth. Use `_log` only as a secondary confirmation.
+- Phase 0/1/2/4/5/Export/6: sentinel file existence is authoritative. A phase could crash after writing output but before logging; the output file is the ground truth. Use `_log` only as a secondary confirmation.
 - Phase 3: `_log` is authoritative for per-file completion. The sub-agent writes `echo "done X.md" >> _log` as its final step. File existence of `annotated_X.md` alone does not guarantee completion (a partial write from a crashed agent could leave a corrupt file). Trust `done` entries in `_log`, but after confirming each `done` entry, verify `annotated_X.md` exists and its size exceeds `X.md` (annotations add content — a smaller or equal-sized file is a partial write).
 
 **Phase 3 partial resume detail:** The main agent reads `_sections.txt` to enumerate `{0, 1, ..., N+1}`. It runs `grep '^done\|^FAILED' _log` to identify files needing no further action. For each X without a `done` or `FAILED` entry, it spawns a Phase 3 sub-agent. If `annotated_X.md` exists for a file without a `done` entry, delete it before spawning (it is a partial write). Files with `done` or `FAILED` entries are left untouched. After the new batch completes, every X must have either a `done` or `FAILED` entry in `_log`.
@@ -192,13 +198,18 @@ cat "${WORK_DIR}/prepend.md" "${WORK_DIR}/annotated_0.md" ... "${WORK_DIR}/annot
 
 Spawn the predefined agent `phase5-auditor`. Pass `${WORK_DIR}`. The agent copies `merged.md` to `audit.md`, runs the audit checklist, fixes all issues, verifies with diff, and appends to `_log`.
 
-### Finalize (Main Agent)
+### Export (Main Agent)
 
 ```bash
 cp "${WORK_DIR}/audit.md" "${PAPER_DIR}/intensive-${BASENAME}.md"
+echo "Export: cp audit.md → intensive-${BASENAME}.md" >> "${WORK_DIR}/_log"
 ```
 
 Report the file path and document structure. Do NOT output the full document inline.
+
+### Phase 6: HTML Conversion (Sub-Agent)
+
+Spawn the predefined agent `phase6-html`. Pass `${PAPER_DIR}`, `${BASENAME}`, and `${WORK_DIR}`. The agent runs pandoc to produce a standalone HTML file with math rendering and table of contents, then appends to `_log`.
 
 ## Output Structure
 
@@ -220,6 +231,7 @@ All work happens in `intensive-${BASENAME}/` alongside the source paper:
 intensive-${BASENAME}/
   original.md        # Phase 0: raw copy
   _rules.md          # Phase 0: copied from skill
+  _log               # Phase 0: init, then all phases append
   clean.md           # Phase 1: OCR-cleaned
   hierarchy.md       # Phase 1: heading-normalized copy of clean.md
   _sections.txt      # Phase 1: file manifest
@@ -237,8 +249,9 @@ intensive-${BASENAME}/
   merged.md          # Phase 4: merged draft
   audit.md           # Phase 5: audited and fixed copy
   _audit.md          # Phase 5: issue list
-  _log               # Phase 0–5: execution log (all agents append)
-intensive-${BASENAME}.md  # Finalize: cp audit.md → alongside source paper
+  pandoc-header.html # Phase 6: CSS snippet for pandoc --include-in-header
+intensive-${BASENAME}.md   # Export: cp audit.md → alongside source paper
+intensive-${BASENAME}.html # Phase 6: pandoc conversion
 ```
 
 ### Agent Assignments
@@ -253,7 +266,8 @@ intensive-${BASENAME}.md  # Finalize: cp audit.md → alongside source paper
 | 3-verify | Main | Check `_log` for all `done` lines, re-spawn missing |
 | 4 | Main | Merge files with `cat` → `merged.md`, verify structure |
 | 5 | `phase5-auditor` | `cp merged.md audit.md`, audit + fix in `audit.md`, diff |
-| Finalize | Main | `cp audit.md` → `intensive-${BASENAME}.md`, report path |
+| Export | Main | `cp audit.md` → `intensive-${BASENAME}.md`, append to `_log`, report path |
+| 6 | `phase6-html` | Run pandoc on `intensive-${BASENAME}.md` → `intensive-${BASENAME}.html` |
 
 ## Quality Checklist
 
