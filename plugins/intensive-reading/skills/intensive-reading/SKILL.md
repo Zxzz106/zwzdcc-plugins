@@ -27,18 +27,19 @@ Do NOT use for: simple summaries, "what does paper X say about Y", one-paragraph
 Before starting Phase 0, verify the paper text is available in the conversation context:
 
 1. If the user provides an `.md` file, use it directly.
-2. If a PDF exists, extract it and symlink:
+2. If a PDF exists, extract it and rename:
    ```bash
-   mineru_2md "${PAPER_DIR}/${BASENAME}.pdf"               # → ${PAPER_DIR}/${BASENAME}/full.md
-   ln -s "${PAPER_DIR}/${BASENAME}/full.md" "${PAPER_DIR}/${BASENAME}.md"
+   PAPER_DIR="${ORIG_FILE_DIR}/${BASENAME}"
+   mineru_2md "${ORIG_FILE_DIR}/${BASENAME}.pdf"           # → ${PAPER_DIR}/full.md
+   mv "${PAPER_DIR}/full.md" "${PAPER_DIR}/${BASENAME}.md"
    ```
-   The symlink `${PAPER_DIR}/${BASENAME}.md` becomes the source file for Phase 0.
+   The renamed file `${PAPER_DIR}/${BASENAME}.md` becomes the source file for Phase 0.
 3. If a URL is provided, run `mineru_2md "<url>"` — mineru_2md supports any URL (PDF, HTML, arXiv).
 4. If none of the above, ask the user to provide the paper text or file path.
 
 Do NOT proceed to Phase 0 without the full paper text. An abstract alone is insufficient for intensive reading.
 
-Once the paper source is confirmed, note: `${BASENAME}` is the source filename without extension. All work happens in `${PAPER_DIR}/intensive-${BASENAME}/` — i.e., alongside the source file. The final annotated output is `intensive-${BASENAME}.md` in the same directory.
+Once the paper source is confirmed, note: `${BASENAME}` is the source filename without extension, and `PAPER_DIR=${ORIG_FILE_DIR}/${BASENAME}`. All work happens in `${PAPER_DIR}/intensive-${BASENAME}/` — i.e., alongside the source file. The final annotated output is `intensive-${BASENAME}.md` in the same directory.
 
 ## Annotation Conventions
 
