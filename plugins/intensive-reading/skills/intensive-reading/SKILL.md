@@ -84,7 +84,13 @@ All work happens within `intensive-${BASENAME}/`, located in the same directory 
 
 Every phase follows copy-then-edit: each output file is either a copy of a previous artifact or newly written to completion. No phase modifies a file from a prior phase in place. This means a session crash or interrupt leaves the work directory in a deterministic state — completed phases have their sentinel files intact, incomplete phases do not.
 
-**On any fresh start, before executing Phase 0, the main agent checks `${WORK_DIR}` (cases 1–6) and `${PAPER_DIR}` (cases 7–9) to determine the resume point:**
+**On any fresh start, before executing Phase 0, the main agent runs the resume check script:**
+   ```bash
+   bash "${CLAUDE_PLUGIN_ROOT}/scripts/check-resume.sh" "${PAPER_DIR}" "${BASENAME}"
+   ```
+   The script validates inputs (rejects BASENAME with path separators or `intensive-` prefix, confirms source file exists), inventories sentinel files, reports per-file Phase 3 status, and prints a verdict. The main agent reads the verdict and proceeds to the indicated phase.
+
+   The verdict cases:
 
 ```
 1. ${WORK_DIR} does not exist
