@@ -75,9 +75,8 @@ After completing all steps above, report the following table to the main agent v
 BASENAME=<value>
 PAPER_DIR=<absolute path>
 WORK_DIR=<absolute path>
-SOURCE_FILE=<absolute path to ${PAPER_DIR}/${BASENAME}.md>
 MD_OUTPUT=<absolute path to intensive-${BASENAME}.md>
 HTML_OUTPUT=<absolute path to intensive-${BASENAME}.html>
 ```
 
-The main agent will use these variables directly — no further path derivation is needed.
+All subsequent phases work within `${WORK_DIR}`. The main agent uses the variables above directly — no further path derivation is needed.

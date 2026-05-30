@@ -63,7 +63,9 @@ Run `cp clean.md hierarchy.md`, then:
 
 You already have `hierarchy.md` with normalized headings. Write `_sections.txt`:
 
-1. **Identify boundaries.** Let boundaries be lines B0, B1, B2, ..., Bk where B1 is the start of Section 1, B2 the start of Section 2, etc. The last body section ends at Bk_end (the line before post-body admin starts). Format: `N:{start}-{end}:"name"`:
+1. **Identify top-level boundaries.** Stage 2 already normalized heading levels — the highest heading level in `hierarchy.md` corresponds to major sections, the next level to sub-sections. Run `grep -n '^## ' hierarchy.md` to locate the top-level heading starts. (If `##` is not the highest level, use whichever level Stage 2 assigned to major sections.) Sub-sections (3.1, 3.2) are at a deeper heading level and stay within their parent — they are NOT split boundaries.
+
+   Format: `N:{start}-{end}:"name"`:
    ```
    0:1-{B0_end}:"Pre-body"
    1:{B1}-{B1_end}:"Introduction"

@@ -31,7 +31,6 @@ All variables are provided by `phase0-initializer`, which handles both `.md` and
 | `BASENAME` | source filename without extension | The raw paper filename. |
 | `PAPER_DIR` | directory containing the source file | All pipeline inputs and outputs live here. |
 | `WORK_DIR` | `${PAPER_DIR}/intensive-${BASENAME}` | All pipeline artifacts live here. |
-| `SOURCE_FILE` | `${PAPER_DIR}/${BASENAME}.md` | Phase 0 copies this to `${WORK_DIR}/original.md`. |
 | `MD_OUTPUT` | `${PAPER_DIR}/intensive-${BASENAME}.md` | Exported annotated markdown. |
 | `HTML_OUTPUT` | `${PAPER_DIR}/intensive-${BASENAME}.html` | Phase 6 pandoc conversion. |
 
@@ -63,24 +62,15 @@ Annotations are always in Chinese. Original text stays in its language.
 
 Search is encouraged whenever it improves annotation quality. If a concept is unfamiliar, a standard is unclear, or a cited method needs more context — search. Err on the side of searching.
 
-**Search — `WebSearch`** (built-in, always available). Use for: looking up unfamiliar concepts, standards, methods, fact-checking, finding recent related work, or historical context of a technique.
-
-**Extract/crawl/research/map — Tavily MCP** (use when the Tavily MCP server is configured; silently skip if unavailable):
-
-| Tool | Use when |
-|------|---------|
-| `tavily_extract` | Fetching the full text of a key reference or a relevant tutorial/overview page |
-| `tavily_crawl` | Exploring a documentation site or standard reference for a specific section |
-| `tavily_research` | Broad questions spanning multiple sources |
-| `tavily_map` | Discovering the structure of a reference site to locate specific information |
-
-**Fallback chain:** Tavily MCP unavailable → skip silently, use `WebSearch` results. If WebSearch is also unavailable, annotate the gap with `※ 注意` and move on — do not halt the pipeline.
+**Use `WebSearch`** for: looking up unfamiliar concepts, standards, methods, fact-checking, finding recent related work, or historical context of a technique.
 
 **Rule:** Do not spend more than 3 searches per unfamiliar concept. If information remains unclear after 3 attempts, flag it with `※ 注意` and move on.
 
 ## Core Methodology
 
 All work happens within `intensive-${BASENAME}/`, located in the same directory as the source paper. `phase0-initializer` creates this directory. All supporting files (`_survey.md`, `_audit.md`, per-section files, etc.) live here. Phase 4 merges into `merged.md`; Phase 5 audits and fixes into `audit.md`; the main agent copies `audit.md` to the final output `intensive-${BASENAME}.md` alongside the source paper.
+
+**Sub-agent spawning rule:** Always pass `run_in_background: false` when spawning any sub-agent. Every phase must complete before the next begins (except Phase 3 parallel annotators, which still run in foreground — the main agent waits for all before proceeding).
 
 ### Interrupt-Resume
 
@@ -162,7 +152,7 @@ Spawn the predefined agent `phase2-surveyor`. Pass `${WORK_DIR}`. The agent read
 
 **Phase 2-verify (main agent):** After the Phase 2 sub-agent completes, verify the outputs:
 
-1. `_survey.md` contains at least 10 terms, each with abbreviation | full English name | Chinese translation.
+1. `_survey.md` contains at least 20 terms, each with abbreviation | full English name | Chinese translation.
 2. `prepend.md` has at least 3 primers, each 5–12 Chinese sentences.
 3. `appendix.md` has Appendix A (Theory Index), Appendix B (Key Values), Appendix C (Glossary — filled from survey).
 4. If any check fails, fix the file or re-spawn Phase 2 before proceeding to Phase 3.
@@ -212,6 +202,8 @@ Report the file path and document structure. Do NOT output the full document inl
 
 Spawn the predefined agent `phase6-html`. Pass `${CLAUDE_PLUGIN_ROOT}`, `${PAPER_DIR}`, `${BASENAME}`, and `${WORK_DIR}`. The agent calls `convert-html.sh` to produce a standalone HTML file with math rendering and table of contents.
 
+If the sub-agent reports failure, read the pandoc error output. Attempt a targeted fix directly on `audit.md`. Record the fix in `${WORK_DIR}/_audit_additional.md` for traceability. Then re-run Export and Phase 6. If the second attempt also fails, report the error to the user — do not loop further.
+
 ## Output Structure
 
 The final `intensive-${BASENAME}.md` follows this per-paragraph format:
@@ -250,7 +242,9 @@ intensive-${BASENAME}/
   merged.md          # Phase 4: merged draft
   audit.md           # Phase 5: audited and fixed copy
   _audit.md          # Phase 5: issue list
-  pandoc-header.html # Phase 6: CSS snippet for pandoc --include-in-header
+  pandoc-header.html     # Phase 6: CSS for pandoc --include-in-header
+  pandoc-after-body.html # Phase 6: JS for pandoc --include-after-body
+  _audit_additional.md   # Phase 6 failure: fix record (main agent)
 intensive-${BASENAME}.md   # Export: cp audit.md → alongside source paper
 intensive-${BASENAME}.html # Phase 6: pandoc conversion
 ```
@@ -294,3 +288,4 @@ Before delivering the intensive reading document, verify:
 - "I can skip Phase 2, I already read it" — Survey is a structured task, not passive reading.
 - "I can produce the annotations in a single pass" — Survey → Primers → Annotate → Appendices → Audit → Fix. Each depends on the prior.
 - "I'll skip the appendices" — Theory Index, Key Values, and Glossary are required navigation aids.
+- Spawning a sub-agent with `run_in_background: true` — All sub-agents must run in foreground. The pipeline is sequential; each phase depends on the prior.
