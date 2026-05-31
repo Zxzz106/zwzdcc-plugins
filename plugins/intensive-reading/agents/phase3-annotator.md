@@ -44,7 +44,7 @@ You will be told:
 ## Procedure
 
 1. Run `cp {X}.md annotated_{X}.md`
-2. Edit `annotated_{X}.md` in place using the Edit tool. For each annotation unit:
+2. Edit `annotated_{X}.md` in place using the Edit tool. **Never use Write — always use Edit to preserve existing content and minimize diff.** For each annotation unit:
 
    **Translation:** Chinese translation immediately after the annotation unit (plain text, no blockquote). Faithful to original meaning, preserve technical loanwords per the language rules in `_rules.md`. When the annotation unit merges multiple structural blocks, the translation must cover the substantive content of every sub-block — not merely summarize the topic or the last block. A reader who reads only the Chinese should not miss any fact, value, or claim present in the English.
 

@@ -57,7 +57,7 @@ Write issue list to `${WORK_DIR}/_audit.md`. Each issue: line number, category (
 
 ## Step 2 — Fix
 
-Fix every issue in `_audit.md` using the Edit tool on `audit.md`, working top-to-bottom. One fix per Edit call. Do NOT introduce new issues. If `_audit.md` is empty, confirm clean and skip.
+Fix every issue in `_audit.md` using the Edit tool on `audit.md`, working top-to-bottom. One fix per Edit call. **Never use Write on audit.md — always use Edit to preserve existing content and minimize diff.** Do NOT introduce new issues. If `_audit.md` is empty, confirm clean and skip.
 
 ## Step 3 — Verify
 

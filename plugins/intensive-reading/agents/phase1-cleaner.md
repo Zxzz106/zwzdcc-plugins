@@ -32,7 +32,7 @@ All file paths are relative to `${WORK_DIR}`. The main agent will tell you `${WO
 
 ### Stage 1 — OCR cleanup
 
-Read `original.md`, apply the artifact cleanup rules below, write to `clean.md`. Run `diff original.md clean.md` to confirm only mechanical artifacts were changed.
+Run `cp original.md clean.md`. Then edit `clean.md` in place using the **Edit** tool to fix artifacts one by one. **Never use Write on clean.md — always Edit.** Run `diff original.md clean.md` to confirm only mechanical artifacts were changed.
 
 | Artifact | Example | Fix |
 |----------|---------|-----|

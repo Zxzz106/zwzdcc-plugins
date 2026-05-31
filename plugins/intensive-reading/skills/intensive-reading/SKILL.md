@@ -130,7 +130,7 @@ No phase ever overwrites a completed output file. A resume from any point produc
 
 ### Phase 0: Initialize (Sub-Agent)
 
-Spawn the predefined agent `phase0-initializer`. Pass the absolute path to the source file and `${CLAUDE_PLUGIN_ROOT}`.
+Spawn the predefined agent `phase0-initializer` (**foreground**). Pass the absolute path to the source file and `${CLAUDE_PLUGIN_ROOT}`.
 
 The agent handles both `.md` and `.pdf` inputs:
 - `.pdf`: runs MinerU API extraction, renames output, derives all paths
@@ -144,11 +144,13 @@ The main agent receives the variable table and uses those values for all subsequ
 
 ### Phase 1: Clean OCR Artifacts (Sub-Agent)
 
-Spawn the predefined agent `phase1-cleaner`. Pass `${WORK_DIR}` as the only context — all procedures (artifact cleanup, heading normalization, manifest creation, file splitting) are defined in the agent.
+Spawn the predefined agent `phase1-cleaner` (**foreground**). Pass `${WORK_DIR}` as the only context — all procedures (artifact cleanup, heading normalization, manifest creation, file splitting) are defined in the agent.
+
+**Phase 1-verify (main agent):** Run `bash "${CLAUDE_PLUGIN_ROOT}/scripts/verify-phase1.sh" "${WORK_DIR}"`. If it fails, fix `_sections.txt` and re-split before proceeding to Phase 2.
 
 ### Phase 2: Survey (Sub-Agent)
 
-Spawn the predefined agent `phase2-surveyor`. Pass `${WORK_DIR}`. The agent reads `_rules.md` + `hierarchy.md`, writes `_survey.md`, `prepend.md`, `appendix.md`, and appends to `_log`.
+Spawn the predefined agent `phase2-surveyor` (**foreground**). Pass `${WORK_DIR}`. The agent reads `_rules.md` + `hierarchy.md`, writes `_survey.md`, `prepend.md`, `appendix.md`, and appends to `_log`.
 
 **Phase 2-verify (main agent):** After the Phase 2 sub-agent completes, verify the outputs:
 
@@ -160,7 +162,7 @@ Spawn the predefined agent `phase2-surveyor`. Pass `${WORK_DIR}`. The agent read
 
 ### Phase 3: Translate and Annotate (Parallel Sub-Agents)
 
-Spawn one `phase3-annotator` agent per file `X.md` (X = 0, 1, 2, ..., N+1). ALL agents run in parallel — each file is independent, no shared state.
+Spawn one `phase3-annotator` agent per file `X.md` (X = 0, 1, 2, ..., N+1), all **foreground**. ALL agents run in parallel — each file is independent, no shared state.
 
 **Main agent procedure:**
 
@@ -187,7 +189,7 @@ cat "${WORK_DIR}/prepend.md" "${WORK_DIR}/annotated_0.md" ... "${WORK_DIR}/annot
 
 ### Phase 5: Audit and Fix (Sub-Agent)
 
-Spawn the predefined agent `phase5-auditor`. Pass `${WORK_DIR}`. The agent copies `merged.md` to `audit.md`, runs the audit checklist, fixes all issues, verifies with diff, and appends to `_log`.
+Spawn the predefined agent `phase5-auditor` (**foreground**). Pass `${WORK_DIR}`. The agent copies `merged.md` to `audit.md`, runs the audit checklist, fixes all issues, verifies with diff, and appends to `_log`.
 
 ### Export (Main Agent)
 
@@ -200,9 +202,9 @@ Report the file path and document structure. Do NOT output the full document inl
 
 ### Phase 6: HTML Conversion (Sub-Agent)
 
-Spawn the predefined agent `phase6-html`. Pass `${CLAUDE_PLUGIN_ROOT}`, `${PAPER_DIR}`, `${BASENAME}`, and `${WORK_DIR}`. The agent calls `convert-html.sh` to produce a standalone HTML file with math rendering and table of contents.
+Spawn the predefined agent `phase6-html` (**foreground**). Pass `${CLAUDE_PLUGIN_ROOT}`, `${PAPER_DIR}`, `${BASENAME}`, and `${WORK_DIR}`. The agent calls `convert-html.sh` to produce a standalone HTML file with math rendering and table of contents.
 
-If the sub-agent reports failure, read the pandoc error output. Attempt a targeted fix directly on `audit.md`. Record the fix in `${WORK_DIR}/_audit_additional.md` for traceability. Then re-run Export and Phase 6. If the second attempt also fails, report the error to the user — do not loop further.
+If the sub-agent reports failure, read the pandoc error output. Run `cp "${WORK_DIR}/audit.md" "${WORK_DIR}/audit_pandoc_fix.md"` and attempt a targeted fix on the copy. Record the fix in `${WORK_DIR}/_audit_additional.md`. If the fix succeeds, run `cp "${WORK_DIR}/audit_pandoc_fix.md" "${WORK_DIR}/audit.md"`, then re-run Export and Phase 6. If the second attempt also fails, report the error to the user — do not loop further.
 
 ## Output Structure
 
@@ -245,6 +247,7 @@ intensive-${BASENAME}/
   pandoc-header.html     # Phase 6: CSS for pandoc --include-in-header
   pandoc-after-body.html # Phase 6: JS for pandoc --include-after-body
   _audit_additional.md   # Phase 6 failure: fix record (main agent)
+  audit_pandoc_fix.md     # Phase 6 failure: temp copy for safe fix
 intensive-${BASENAME}.md   # Export: cp audit.md → alongside source paper
 intensive-${BASENAME}.html # Phase 6: pandoc conversion
 ```
@@ -255,6 +258,7 @@ intensive-${BASENAME}.html # Phase 6: pandoc conversion
 |-------|-------|--------|
 | 0 | `phase0-initializer` | Handle `.md` or `.pdf`: extract PDF if needed, derive paths, `mkdir`, copy `original.md` and `_rules.md`, init `_log`, return variable table |
 | 1 | `phase1-cleaner` | OCR cleanup + heading normalization + manifest + split |
+| 1-verify | Main | `verify-phase1.sh` — validate split coverage, ranges, boundaries |
 | 2 | `phase2-surveyor` | Read `_rules.md` + `hierarchy.md`, write `_survey.md`, `prepend.md`, `appendix.md` |
 | 2-verify | Main | Validate survey outputs (term counts, primer length, appendix sections) |
 | 3 | `phase3-annotator` × N | Parallel: one per `X.md`, read rules + survey + prepend + source, produce `annotated_X.md` |

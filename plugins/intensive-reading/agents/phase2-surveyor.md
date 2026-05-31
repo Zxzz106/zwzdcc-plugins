@@ -77,6 +77,16 @@ Three appendix sections:
 
 **Appendix C — Glossary:** Full table from the terminology inventory: English term | Chinese translation | First occurrence (section). All acronyms must be covered.
 
+### Step 6: Self-verify terminology translations
+
+Review every term in the terminology inventory. For each assigned Chinese translation, classify:
+
+- **Confident** — you know the standard translation in this field. Skip.
+- **Uncertain** — you are guessing or the term is outside your expertise. Search with `WebSearch` to verify (≤3 searches).
+- **Suspicious** — the translation seems wrong or you recall conflicting conventions. Must search; resolve before proceeding.
+
+If search reveals a correction, update the translation in `_survey.md`, `prepend.md` (if the term appears in primers), and `appendix.md` (Glossary). If search is inconclusive after 3 attempts, keep your translation and append a `※ 注意` note in `_survey.md` next to the term.
+
 ### Completion
 
 Append to log: `echo "Phase 2: survey done — N terms, M primers, K eqns" >> _log` (fill actual counts).

@@ -32,7 +32,7 @@ BASENAME="$(basename "path/to/paper.pdf" .pdf)"
 PAPER_DIR="${ORIG_FILE_DIR}/${BASENAME}"
 
 # Run extraction (may take several minutes)
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/mineru_2md.sh" "${ORIG_FILE_DIR}/${BASENAME}.pdf"
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/mineru_2md.sh" -o "${ORIG_FILE_DIR}" "${ORIG_FILE_DIR}/${BASENAME}.pdf"
 
 # Rename output
 mv "${PAPER_DIR}/full.md" "${PAPER_DIR}/${BASENAME}.md"
